@@ -13,13 +13,20 @@ CARD_BACK_CENTER = (35.5, 48)
 card_back = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/card_back.png")    
 
 # default message
-YOU_HAVE_BUSTED = "You have busted! New deal?"
+YOU_HAVE_BUSTED = "You have busted!"
+YOU_WIN = "Player wins!"
+YOU_LOSE = "Player lose!"
+DEALER_WIN = "Dealer wins!"
+DEALER_BUSTED = "Dealer busted!"
+NEW_DEAL = "New deal?"
 HIT_OR_STAND = "Hit or stand?"
+INVALID_DEAL = "Pressed 'Deal' in the middle of the game!"
 
 # initialize some useful global variables
 in_play = False
 player_busted = False
 outcome = ""
+invalid_deal = False
 score = 0
 
 # define globals for cards
@@ -91,8 +98,7 @@ class Hand:
         for item in self.cards:
             item.draw(canvas, (pos[0] + CARD_SIZE[0] * index + 10 * index, pos[1]))
             index+=1
- 
-        
+     
 # define deck class 
 class Deck:
     def __init__(self):
@@ -120,40 +126,55 @@ class Deck:
 def card_draw_back(canvas, pos):
     canvas.draw_image(card_back, CARD_BACK_CENTER, CARD_BACK_SIZE, [pos[0] + CARD_BACK_CENTER[0], pos[1] + CARD_BACK_CENTER[1]], CARD_BACK_SIZE)
 
+def is_invalid_deal(condition):
+    global invalid_deal, score 
+    invalid_deal = ""
+    if condition:
+        invalid_deal = INVALID_DEAL + " " + YOU_LOSE
+        score -= 1
 
 #define event handlers for buttons
 def deal():
-    global outcome, in_play, player_hands
+    global outcome, in_play, player_hands, score
     global dealer_hands, deck, player_busted
 
+    is_invalid_deal(in_play)
+
     outcome = HIT_OR_STAND
-    score = 0
+        
     player_busted = False
+    in_play = True    
+
+    #setup game
     player_hands = Hand()
     dealer_hands = Hand()
     deck = Deck()
     deck.shuffle()
-
+    
+    # add two card to the player hand
     player_hands.add_card(deck.deal_card())
     player_hands.add_card(deck.deal_card())
-
+    
+    # add two card to the dealer hand
     dealer_hands.add_card(deck.deal_card())
     dealer_hands.add_card(deck.deal_card())
 
-    in_play = True
 
 def hit():
     # if the hand is in play, hit the player
     # if busted, assign a message to outcome, update in_play and score
     global outcome, in_play, player_busted, score
+    global invalid_deal
+    is_invalid_deal(False)
     if player_busted:
-        outcome = YOU_HAVE_BUSTED
+        outcome = YOU_HAVE_BUSTED + " " + NEW_DEAL
     else:
         if player_hands.get_value() <= 21:
             player_hands.add_card(deck.deal_card())
     
         if player_hands.get_value() > 21:
-            outcome = YOU_HAVE_BUSTED
+            score -= 1
+            outcome = YOU_HAVE_BUSTED + " " + NEW_DEAL
             in_play = False
             player_busted = True
         else:
@@ -164,40 +185,51 @@ def stand():
     # if hand is in play, repeatedly hit dealer until his hand has value 17 or more
     # assign a message to outcome, update in_play and score
     in_play = False
+    is_invalid_deal(in_play)
     if player_busted:
-        outcome = YOU_HAVE_BUSTED
+        outcome = YOU_HAVE_BUSTED + " " + NEW_DEAL
     else:
         while dealer_hands.get_value() < 17:
             dealer_hands.add_card(deck.deal_card())
             
         if dealer_hands.get_value() > 21:
-            outcome = "Dealer busted!"
-            outcome += " Player wins!"
+            score += 1
+            outcome = DEALER_BUSTED + " " + YOU_WIN + " " + NEW_DEAL
         elif dealer_hands.get_value() >= player_hands.get_value():
-            outcome = "Dealer wins!"          
+            score -=1
+            outcome = DEALER_WIN + " " + NEW_DEAL
         else:
-            outcome = "Player wins!"          
+            score += 1
+            outcome = YOU_WIN + " " + NEW_DEAL
+            
             
 # draw handler    
 def draw(canvas):
     # test to make sure that card.draw works, replace with your code below
-    canvas.draw_text('Blackjack', (40, 100), 100, 'Yellow')
+    canvas.draw_text('Blackjack', (40, 90), 100, 'Yellow')
     
     # dealer canvas
-    dealer_hands.draw(canvas, [40, 220])
     dText = ""
+    dealer_pos = (40, 170)
+    dealer_hands.draw(canvas, dealer_pos)
     if in_play:
-        card_draw_back(canvas, [40, 220])
+        card_draw_back(canvas, (41, 171))
         dText = "Dealer (?)"
     else:
         dText = "Dealer (" + str(dealer_hands.get_value()) + ")"
-    canvas.draw_text(dText, (40, 200), 30, 'Black')
+    canvas.draw_text(dText, (40, 150), 30, 'Black')
 
     # player canvas
+    player_hands.draw(canvas, (40, 340))
     pText = "Player (" + str(player_hands.get_value()) + ")"
-    canvas.draw_text(pText, (40, 370), 30, 'Black')
-    canvas.draw_text(outcome, (200, 370), 30, 'Black')
-    player_hands.draw(canvas, [40, 400])
+    canvas.draw_text(pText, (40, 320), 30, 'Black')
+
+    # messages
+    canvas.draw_text(outcome, (40, 480), 30, 'Black')
+    canvas.draw_text("Score: " + str(score), (40, 520), 30, 'Black')
+    # alert message
+    canvas.draw_text(invalid_deal, (40, 560), 25, 'Red')
+
     
 # setup enviroment (players and deck)
 player_hands = Hand()

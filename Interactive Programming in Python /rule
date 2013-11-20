@@ -1,0 +1,3 @@
+Add a score counter that keeps track of wins and losses for your Blackjack session. In the simplest case (see our demo), the program displays wins minus losses. However, you are welcome to implement a more sophisticated betting/scoring system.
+Modify the logic for the "Deal" button to create and shuffle a new deck (or restock and shuffle an existing deck) each time the "Deal" button is clicked. This change avoids the situation where the deck becomes empty during play.
+Finally, modify the deal function such that, if the "Deal" button is clicked during the middle of a round, the program reports that the player lost the round and updates the score appropriately.
