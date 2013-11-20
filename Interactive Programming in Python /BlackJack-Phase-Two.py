@@ -1,5 +1,5 @@
 # Mini-project #6 - Blackjack
-# http://www.codeskulptor.org/#user25_3wmvWI306b_1.py
+# http://www.codeskulptor.org/#user25_3wmvWI306b_2.py
 import simplegui
 import random
 
@@ -165,20 +165,21 @@ def hit():
     # if busted, assign a message to outcome, update in_play and score
     global outcome, in_play, player_busted, score
     global invalid_deal
-    is_invalid_deal(False)
-    if player_busted:
-        outcome = YOU_HAVE_BUSTED + " " + NEW_DEAL
-    else:
-        if player_hands.get_value() <= 21:
-            player_hands.add_card(deck.deal_card())
-    
-        if player_hands.get_value() > 21:
-            score -= 1
+    if in_play:
+        is_invalid_deal(False)
+        if player_busted:
             outcome = YOU_HAVE_BUSTED + " " + NEW_DEAL
-            in_play = False
-            player_busted = True
         else:
-            outcome = HIT_OR_STAND 
+            if player_hands.get_value() <= 21:
+                player_hands.add_card(deck.deal_card())
+        
+            if player_hands.get_value() > 21:
+                score -= 1
+                outcome = YOU_HAVE_BUSTED + " " + NEW_DEAL
+                in_play = False
+                player_busted = True
+            else:
+                outcome = HIT_OR_STAND 
        
 def stand():
     global outcome, in_play, player_busted, score
