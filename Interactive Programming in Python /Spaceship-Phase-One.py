@@ -97,12 +97,20 @@ class Ship:
         self.radius = info.get_radius()
         
     def draw(self,canvas):
-        canvas.draw_circle(self.pos, self.radius, 1, "White", "White")
-
+        canvas.draw_image(self.image, self.image_center, self.image_size, self.pos, self.image_size, self.angle)
     def update(self):
-        pass
-    
-    
+        self.pos[0] += self.vel[0]
+        self.pos[1] += self.vel[1]    
+        self.angle += self.angle_vel
+    def rotate_left(self):
+        if self.angle_vel == 0 or self.angle_vel > 0:
+            self.angle_vel = -0.05
+    def rotate_right(self):
+        if self.angle_vel == 0 or self.angle_vel < 0:
+            self.angle_vel = 0.05
+    def rotate_stop(self):
+        self.angle_vel = 0
+
 # Sprite class
 class Sprite:
     def __init__(self, pos, vel, ang, ang_vel, image, info, sound = None):
@@ -153,9 +161,20 @@ def draw(canvas):
 # timer handler that spawns a rock    
 def rock_spawner():
     pass
-    
+def keydown_handler(key):
+    if simplegui.KEY_MAP['left'] == key:
+        my_ship.rotate_left()
+    if simplegui.KEY_MAP['right'] == key:
+        my_ship.rotate_right()
+
+def keyup_handler(key):
+    if simplegui.KEY_MAP['left'] == key or simplegui.KEY_MAP['right'] == key:
+        my_ship.rotate_stop()
+
 # initialize frame
 frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
+frame.set_keydown_handler(keydown_handler)
+frame.set_keyup_handler(keyup_handler)
 
 # initialize ship and two sprites
 my_ship = Ship([WIDTH / 2, HEIGHT / 2], [0, 0], 0, ship_image, ship_info)
@@ -170,4 +189,3 @@ timer = simplegui.create_timer(1000.0, rock_spawner)
 # get things rolling
 timer.start()
 frame.start()
-
