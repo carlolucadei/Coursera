@@ -97,11 +97,19 @@ class Ship:
         self.radius = info.get_radius()
         
     def draw(self,canvas):
-        canvas.draw_image(self.image, self.image_center, self.image_size, self.pos, self.image_size, self.angle)
+        if self.thrust:
+            canvas.draw_image(self.image, [135, 45], self.image_size, self.pos, self.image_size, self.angle)
+        else:
+            canvas.draw_image(self.image, self.image_center, self.image_size, self.pos, self.image_size, self.angle)
+        
     def update(self):
         self.pos[0] += self.vel[0]
         self.pos[1] += self.vel[1]    
         self.angle += self.angle_vel
+        
+    def toggle_thrust(self, active):
+        self.thrust = active
+        
     def rotate_left(self):
         if self.angle_vel == 0 or self.angle_vel > 0:
             self.angle_vel = -0.05
@@ -166,10 +174,14 @@ def keydown_handler(key):
         my_ship.rotate_left()
     if simplegui.KEY_MAP['right'] == key:
         my_ship.rotate_right()
-
+    if simplegui.KEY_MAP['up'] == key:
+        my_ship.toggle_thrust(True)
+        
 def keyup_handler(key):
     if simplegui.KEY_MAP['left'] == key or simplegui.KEY_MAP['right'] == key:
         my_ship.rotate_stop()
+    if simplegui.KEY_MAP['up'] == key:
+        my_ship.toggle_thrust(False)
 
 # initialize frame
 frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
