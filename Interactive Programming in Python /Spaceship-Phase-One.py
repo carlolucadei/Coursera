@@ -104,12 +104,22 @@ class Ship:
         
     def update(self):
         self.angle += self.angle_vel
+        # calculate forward
         pos_angle =  angle_to_vector(self.angle)
+        
+        # friction update
+        self.vel[0] = 0.95 * self.vel[0]
+        self.vel[1] = 0.95 * self.vel[1]
+        
+        # apply thrust
         if self.thrust:
-            self.vel[0] += 0.15
-            self.vel[1] += 0.15
-        self.pos[0] += self.vel[0] * pos_angle[0] + pos_angle[0]
-        self.pos[1] += self.vel[1] * pos_angle[1] + pos_angle[1]
+            self.vel[0] += pos_angle[0] + 0.15
+            self.vel[1] += pos_angle[1] + 0.15
+        
+        #update position
+        self.pos[0] += self.vel[0]
+        self.pos[1] += self.vel[1]
+        
         if self.pos[0] >= WIDTH:
             self.pos[0] = 0
         elif self.pos[0] <= 0:
