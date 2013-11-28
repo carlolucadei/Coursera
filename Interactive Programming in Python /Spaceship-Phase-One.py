@@ -103,19 +103,20 @@ class Ship:
             canvas.draw_image(self.image, self.image_center, self.image_size, self.pos, self.image_size, self.angle)
         
     def update(self):
-        self.pos[0] += self.vel[0]
-        self.pos[1] += self.vel[1]    
         self.angle += self.angle_vel
+        pos_angle =  angle_to_vector(self.angle)
+        self.pos[0] += self.vel[0] + pos_angle[0]
+        self.pos[1] += self.vel[1] + pos_angle[1]
         
     def toggle_thrust(self, active):
         self.thrust = active
         
     def rotate_left(self):
         if self.angle_vel == 0 or self.angle_vel > 0:
-            self.angle_vel = -0.05
+            self.angle_vel = -0.08
     def rotate_right(self):
         if self.angle_vel == 0 or self.angle_vel < 0:
-            self.angle_vel = 0.05
+            self.angle_vel = 0.08
     def rotate_stop(self):
         self.angle_vel = 0
 
@@ -176,12 +177,14 @@ def keydown_handler(key):
         my_ship.rotate_right()
     if simplegui.KEY_MAP['up'] == key:
         my_ship.toggle_thrust(True)
+        ship_thrust_sound.play()
         
 def keyup_handler(key):
     if simplegui.KEY_MAP['left'] == key or simplegui.KEY_MAP['right'] == key:
         my_ship.rotate_stop()
     if simplegui.KEY_MAP['up'] == key:
         my_ship.toggle_thrust(False)
+        ship_thrust_sound.rewind()
 
 # initialize frame
 frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
