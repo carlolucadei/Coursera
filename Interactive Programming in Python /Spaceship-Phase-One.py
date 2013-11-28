@@ -105,9 +105,21 @@ class Ship:
     def update(self):
         self.angle += self.angle_vel
         pos_angle =  angle_to_vector(self.angle)
-        self.pos[0] += self.vel[0] + pos_angle[0]
-        self.pos[1] += self.vel[1] + pos_angle[1]
+        if self.thrust:
+            self.vel[0] += 0.15
+            self.vel[1] += 0.15
+        self.pos[0] += self.vel[0] * pos_angle[0] + pos_angle[0]
+        self.pos[1] += self.vel[1] * pos_angle[1] + pos_angle[1]
+        if self.pos[0] >= WIDTH:
+            self.pos[0] = 0
+        elif self.pos[0] <= 0:
+            self.pos[0] = WIDTH
+        if self.pos[1]>= HEIGHT:
+            self.pos[1] = 0
+        elif self.pos[1] <= 0:
+            self.pos[1] = HEIGHT
         
+            
     def toggle_thrust(self, active):
         self.thrust = active
         
