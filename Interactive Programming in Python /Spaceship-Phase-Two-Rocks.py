@@ -199,7 +199,23 @@ def draw(canvas):
             
 # timer handler that spawns a rock    
 def rock_spawner():
-    pass
+    global a_rock
+    radius = asteroid_info.get_radius()
+    # random position
+    pos = [random.randrange(0, WIDTH - radius), random.randrange(0, HEIGHT - radius)]
+    # random velocity
+    vel_x = 2 + 2 * random.random()
+    vel_y = 2 * (random.random() - 0.5) 
+    if random.randrange(0, 2) == 1:
+        vel_x = - vel_x
+    vel = [vel_x, vel_y]
+    # random angle
+    angle_lower = -0.15
+    angle_upper = 0.15
+    angle_range_width = angle_upper - angle_lower
+    angle = random.random() * angle_range_width + angle_lower
+    a_rock = Sprite(pos, vel, 0, angle, asteroid_image, asteroid_info)
+
 def keydown_handler(key):
     if simplegui.KEY_MAP['left'] == key:
         my_ship.rotate_left()
