@@ -103,38 +103,41 @@ class Ship:
             canvas.draw_image(self.image, self.image_center, self.image_size, self.pos, self.image_size, self.angle)
         
     def update(self):
+        # update angle
         self.angle += self.angle_vel
-        #update position
-        self.pos[0] += self.vel[0]
-        self.pos[1] += self.vel[1]
         
-        # friction update
-        self.vel[0] = 0.92 * self.vel[0]
-        self.vel[1] = 0.92 * self.vel[1]
-        
+        # update position
+        self.pos = [(self.pos[0] + self.vel[0]) % WIDTH, (self.pos[1] + self.vel[1]) % HEIGHT]
+
         # calculate forward
-        pos_angle =  angle_to_vector(self.angle)
+        forward =  angle_to_vector(self.angle)
+
         # apply thrust
         if self.thrust:
-            self.vel[0] += pos_angle[0]
-            self.vel[1] += pos_angle[1]
-             
-        if self.pos[0] >= WIDTH:
-            self.pos[0] = 0
-        elif self.pos[0] <= 0:
-            self.pos[0] = WIDTH
-        if self.pos[1]>= HEIGHT:
-            self.pos[1] = 0
-        elif self.pos[1] <= 0:
-            self.pos[1] = HEIGHT
-        
+            self.vel[0] += forward[0] * 0.9
+            self.vel[1] += forward[1] * 0.9
+
+        # friction update
+        self.vel[0] *= 0.94
+        self.vel[1] *= 0.94
+
+    def tip_position(self):
+        return [self.radius * math.cos(self.angle), self.radius * math.sin(self.angle)]
+
+    def shoot(self):
+        global a_missile
+        direction = angle_to_vector(self.angle)
+        tip = self.tip_position()
+        missile_pos = [self.pos[0] + tip[0], self.pos[1] + tip[1]]
+        missile_vel = [self.vel[0] + direction[0] * 3, self.vel[1] + direction[1] * 3]
+        a_missile = Sprite(missile_pos, missile_vel, 0, 0, missile_image, missile_info, missile_sound)
             
     def toggle_thrust(self, active):
         self.thrust = active
         
     def rotate_left(self):
         if self.angle_vel == 0 or self.angle_vel > 0:
-            self.angle_vel = -0.04
+            self.angle_vel = -0.05
     def rotate_right(self):
         if self.angle_vel == 0 or self.angle_vel < 0:
             self.angle_vel = 0.04
@@ -195,6 +198,12 @@ def draw(canvas):
     my_ship.update()
     a_rock.update()
     a_missile.update()
+
+    # draw live and scores
+    canvas.draw_text('Lives', (30, 50), 25, 'White')
+    canvas.draw_text(str(lives), (30, 75), 25, 'White')
+    canvas.draw_text('Score', [WIDTH-100, 50], 25, 'White')
+    canvas.draw_text(str(score), [WIDTH-100, 75], 25, 'White')
             
 # timer handler that spawns a rock    
 def rock_spawner():
@@ -215,6 +224,7 @@ def rock_spawner():
     angle = random.random() * angle_range_width + angle_lower
     a_rock = Sprite(pos, vel, 0, angle, asteroid_image, asteroid_info)
 
+
 def keydown_handler(key):
     if simplegui.KEY_MAP['left'] == key:
         my_ship.rotate_left()
@@ -223,6 +233,8 @@ def keydown_handler(key):
     if simplegui.KEY_MAP['up'] == key:
         my_ship.toggle_thrust(True)
         ship_thrust_sound.play()
+    if simplegui.KEY_MAP['space'] == key:
+        my_ship.shoot()
         
 def keyup_handler(key):
     if simplegui.KEY_MAP['left'] == key or simplegui.KEY_MAP['right'] == key:
