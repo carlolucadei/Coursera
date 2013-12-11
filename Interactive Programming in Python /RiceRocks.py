@@ -227,7 +227,7 @@ def click(pos):
         started = True
 
 def draw(canvas):
-    global time, started
+    global time, started, rock_group, lives
     
     # animiate background
     time += 1
@@ -271,7 +271,7 @@ def rock_spawner():
     rock_pos = [random.randrange(0, WIDTH), random.randrange(0, HEIGHT)]
     rock_vel = [random.random() * .6 - .3, random.random() * .6 - .3]
     rock_avel = random.random() * .2 - .1
-    if len(rock_group) < 12:
+    if len(rock_group) < 2:
         rock_group.add(Sprite(rock_pos, rock_vel, 0, rock_avel, asteroid_image, asteroid_info))
 
 def process_sprite_group(items, canvas):
@@ -283,7 +283,7 @@ def process_sprite_group(items, canvas):
 def group_collide(items, sprite):
     backup = set(items)
     for item in items:
-        if items.collide(sprite):
+        if item.collide(sprite):
             backup.remove(item)
     if len(items) != len(backup):
         items = set(backup)
