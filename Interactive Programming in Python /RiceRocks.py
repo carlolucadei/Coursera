@@ -145,7 +145,9 @@ class Ship:
         missile_pos = [self.pos[0] + self.radius * forward[0], self.pos[1] + self.radius * forward[1]]
         missile_vel = [self.vel[0] + 6 * forward[0], self.vel[1] + 6 * forward[1]]
         a_missile = Sprite(missile_pos, missile_vel, self.angle, 0, missile_image, missile_info, missile_sound)
-    
+
+    def get_position(self):
+        return [self.pos[0], self.pos[1]]
     
     
 # Sprite class
@@ -177,7 +179,23 @@ class Sprite:
         # update position
         self.pos[0] = (self.pos[0] + self.vel[0]) % WIDTH
         self.pos[1] = (self.pos[1] + self.vel[1]) % HEIGHT
-  
+
+    """
+    Add a collide method to the Sprite class. This should take an
+    other_object as an argument and return True if there is a collision or
+    False otherwise. For now, this other object will always be your ship,
+    but we want to be able to use this collide method to detect collisions
+    with missiles later, as well. Collisions can be detected using the
+    radius of the two objects. This requires you to implement methods
+    get_position and get_radius on both the Sprite and Ship classes.
+    """
+    def collide(self, item):
+        distance = dist(self.pos, item.get_position())
+        if distance - self.radius - item.radius > 0:
+            return False
+        return True
+
+
         
 # key handlers to control ship   
 def keydown(key):
@@ -236,6 +254,10 @@ def draw(canvas):
 
     # update and draw rocks
     process_sprite_group(rock_group, canvas)
+
+    # check collision
+    if group_collide(rock_group, my_ship):
+        lives -= 1
     
     # draw splash screen if not started
     if not started:
@@ -256,7 +278,18 @@ def process_sprite_group(items, canvas):
     for item in items:
         item.update()
         item.draw(canvas)
-            
+
+# group_collide helper function.
+def group_collide(items, sprite):
+    backup = set(items)
+    for item in items:
+        if items.collide(sprite):
+            backup.remove(item)
+    if len(items) != len(backup):
+        items = set(backup)
+        return True
+    return False
+
 # initialize stuff
 frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
 
