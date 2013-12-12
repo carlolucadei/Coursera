@@ -182,6 +182,9 @@ class Sprite:
         if self.age >= self.lifespan:
             return True
         return False
+    
+    def get_position(self):
+        return [self.pos[0], self.pos[1]]
 
     def collide(self, item):
         distance = dist(self.pos, item.get_position())
@@ -221,7 +224,7 @@ def click(pos):
         started = True
 
 def draw(canvas):
-    global time, started, rock_group, missile_group, lives
+    global time, started, rock_group, missile_group, lives, score
     
     # animiate background
     time += 1
@@ -248,6 +251,10 @@ def draw(canvas):
     # update and draw rocks
     process_sprite_group(rock_group, canvas)
 
+    # check missiles and rocks collisions
+    collisions = group_group_collide(missile_group, rock_group)
+    score += collisions
+    
     # check collision
     if group_collide(rock_group, my_ship):
         lives -= 1
@@ -282,10 +289,24 @@ def group_collide(items, sprite):
     for item in items:
         if item.collide(sprite):
             backup.remove(item)
+
     if len(items) != len(backup):
         items = set(backup)
         return True
     return False
+
+def group_group_collide(collection_one, collection_two):
+    collision = 0
+    remove = set()
+    for item_one in collection_one:
+        if group_collide(collection_two, item_one):
+            collision += 1
+            remove.add(item_one)
+   
+    for item in remove:
+        collection_one.discard(item)
+        
+    return collision
 
 # initialize stuff
 frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
