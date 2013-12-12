@@ -6,6 +6,8 @@ import random
 # globals for user interface
 WIDTH = 800
 HEIGHT = 600
+DISTANCE = 100
+MAX_ROCKS = 12
 score = 0
 lives = 3
 time = 0
@@ -213,7 +215,9 @@ def keyup(key):
         
 # mouseclick handlers that reset UI and conditions whether splash image is drawn
 def click(pos):
-    global started
+    global started, score, lives
+    score = 0
+    lives = 3
     center = [WIDTH / 2, HEIGHT / 2]
     size = splash_info.get_size()
     inwidth = (center[0] - size[0] / 2) < pos[0] < (center[0] + size[0] / 2)
@@ -255,9 +259,15 @@ def draw(canvas):
     # check collision
     if group_collide(rock_group, my_ship):
         lives -= 1
-    
+
+    if lives == 0:
+        started = False
+
     # draw splash screen if not started
     if not started:
+        #reset rock, missile, score and lives
+        missile_group = set()
+        rock_group = set()   
         canvas.draw_image(splash_image, splash_info.get_center(), 
                           splash_info.get_size(), [WIDTH / 2, HEIGHT / 2], 
                           splash_info.get_size())
@@ -268,7 +278,7 @@ def rock_spawner():
     rock_pos = [random.randrange(0, WIDTH), random.randrange(0, HEIGHT)]
     rock_vel = [random.random() * .6 - .3, random.random() * .6 - .3]
     rock_avel = random.random() * .2 - .1
-    if len(rock_group) < 12:
+    if len(rock_group) < MAX_ROCKS and started and dist(rock_pos, my_ship.get_position()) > DISTANCE:
         rock_group.add(Sprite(rock_pos, rock_vel, 0, rock_avel, asteroid_image, asteroid_info))
 
 def process_sprite_group(items, canvas):
