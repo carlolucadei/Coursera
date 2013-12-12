@@ -69,11 +69,12 @@ asteroid_image = simplegui.load_image("http://commondatastorage.googleapis.com/c
 
 # animated explosion - explosion_orange.png, explosion_blue.png, explosion_blue2.png, explosion_alpha.png
 explosion_info = ImageInfo([64, 64], [128, 128], 17, 24, True)
-explosion_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_alpha.png")
+explosion_image = simplegui.load_image("http://commondatastorage.googleapis.com/codeskulptor-assets/lathrop/explosion_orange.png")
 
 # sound assets purchased from sounddogs.com, please do not redistribute
 # .ogg versions of sounds are also available, just replace .mp3 by .ogg
 soundtrack = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/soundtrack.mp3")
+soundtrack.set_volume(.5)
 missile_sound = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/missile.mp3")
 missile_sound.set_volume(.5)
 ship_thrust_sound = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/sounddogs/thrust.mp3")
@@ -108,7 +109,6 @@ class Ship:
         else:
             canvas.draw_image(self.image, self.image_center, self.image_size,
                               self.pos, self.image_size, self.angle)
-        # canvas.draw_circle(self.pos, self.radius, 1, "White", "White")
 
     def update(self):
         # update angle
@@ -171,7 +171,13 @@ class Sprite:
             sound.play()
    
     def draw(self, canvas):
-        canvas.draw_image(self.image, self.image_center, self.image_size,
+        if self.animated:
+            #calculate animation
+            index = (self.age % self.radius) // 1
+            center = [self.image_center[0] +  index * self.image_size[0], self.image_center[1]]
+            canvas.draw_image(self.image, center, self.image_size, self.pos, self.image_size) 
+        else:
+            canvas.draw_image(self.image, self.image_center, self.image_size,
                           self.pos, self.image_size, self.angle)
 
     def update(self):
@@ -191,8 +197,6 @@ class Sprite:
         if distance - self.radius - item.radius > 0:
             return False
         return True
-
-
         
 # key handlers to control ship   
 def keydown(key):
@@ -226,7 +230,7 @@ def click(pos):
         started = True
 
 def draw(canvas):
-    global time, started, rock_group, missile_group, lives, score
+    global time, started, rock_group, missile_group, lives, score, explosion_group
     
     # animiate background
     time += 1
@@ -252,7 +256,7 @@ def draw(canvas):
 
     # update and draw rocks
     process_sprite_group(rock_group, canvas)
-
+    process_sprite_group(explosion_group, canvas)
     # check missiles and rocks collisions
     score += group_group_collide(missile_group, rock_group)
     
@@ -267,7 +271,9 @@ def draw(canvas):
     if not started:
         #reset rock, missile, score and lives
         missile_group = set()
-        rock_group = set()   
+        rock_group = set()
+        soundtrack.rewind()
+        soundtrack.play()
         canvas.draw_image(splash_image, splash_info.get_center(), 
                           splash_info.get_size(), [WIDTH / 2, HEIGHT / 2], 
                           splash_info.get_size())
@@ -293,6 +299,9 @@ def group_collide(items, sprite):
     result = False
     for item in list(items):
         if item.collide(sprite):
+            # add explosion using the same position of the removed
+            # item. No angle, no velocity
+            explosion_group.add(Sprite(item.get_position(), [0, 0], 0, 0, explosion_image, explosion_info, explosion_sound))
             items.discard(item)
             result = True
 
@@ -312,8 +321,10 @@ frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
 
 # initialize ship and two sprites
 my_ship = Ship([WIDTH / 2, HEIGHT / 2], [0, 0], 0, ship_image, ship_info)
+
 rock_group = set()
 missile_group = set()
+explosion_group = set()
 
 
 # register handlers
