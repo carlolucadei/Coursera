@@ -140,11 +140,11 @@ class Ship:
         self.angle_vel -= .05
         
     def shoot(self):
-        global a_missile
+        global missile_group
         forward = angle_to_vector(self.angle)
         missile_pos = [self.pos[0] + self.radius * forward[0], self.pos[1] + self.radius * forward[1]]
         missile_vel = [self.vel[0] + 6 * forward[0], self.vel[1] + 6 * forward[1]]
-        a_missile = Sprite(missile_pos, missile_vel, self.angle, 0, missile_image, missile_info, missile_sound)
+        missile_group.add(Sprite(missile_pos, missile_vel, self.angle, 0, missile_image, missile_info, missile_sound))
 
     def get_position(self):
         return [self.pos[0], self.pos[1]]
@@ -175,20 +175,14 @@ class Sprite:
     def update(self):
         # update angle
         self.angle += self.angle_vel
-        
+        self.age += 1
         # update position
         self.pos[0] = (self.pos[0] + self.vel[0]) % WIDTH
         self.pos[1] = (self.pos[1] + self.vel[1]) % HEIGHT
+        if self.age >= self.lifespan:
+            return True
+        return False
 
-    """
-    Add a collide method to the Sprite class. This should take an
-    other_object as an argument and return True if there is a collision or
-    False otherwise. For now, this other object will always be your ship,
-    but we want to be able to use this collide method to detect collisions
-    with missiles later, as well. Collisions can be detected using the
-    radius of the two objects. This requires you to implement methods
-    get_position and get_radius on both the Sprite and Ship classes.
-    """
     def collide(self, item):
         distance = dist(self.pos, item.get_position())
         if distance - self.radius - item.radius > 0:
@@ -227,7 +221,7 @@ def click(pos):
         started = True
 
 def draw(canvas):
-    global time, started, rock_group, lives
+    global time, started, rock_group, missile_group, lives
     
     # animiate background
     time += 1
@@ -246,11 +240,10 @@ def draw(canvas):
 
     # draw ship and sprites
     my_ship.draw(canvas)
-    a_missile.draw(canvas)
     
     # update ship and sprites
     my_ship.update()
-    a_missile.update()
+    process_sprite_group(missile_group, canvas)
 
     # update and draw rocks
     process_sprite_group(rock_group, canvas)
@@ -267,7 +260,7 @@ def draw(canvas):
 
 # timer handler that spawns a rock    
 def rock_spawner():
-    global a_rock
+    global rock_group
     rock_pos = [random.randrange(0, WIDTH), random.randrange(0, HEIGHT)]
     rock_vel = [random.random() * .6 - .3, random.random() * .6 - .3]
     rock_avel = random.random() * .2 - .1
@@ -275,9 +268,13 @@ def rock_spawner():
         rock_group.add(Sprite(rock_pos, rock_vel, 0, rock_avel, asteroid_image, asteroid_info))
 
 def process_sprite_group(items, canvas):
+    backup = set(items)
     for item in items:
-        item.update()
-        item.draw(canvas)
+        if item.update():
+            backup.remove(item)
+        else:
+            item.draw(canvas)
+    items = set(backup)
 
 # group_collide helper function.
 def group_collide(items, sprite):
@@ -296,7 +293,7 @@ frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
 # initialize ship and two sprites
 my_ship = Ship([WIDTH / 2, HEIGHT / 2], [0, 0], 0, ship_image, ship_info)
 rock_group = set()
-a_missile = Sprite([2 * WIDTH / 3, 2 * HEIGHT / 3], [-1,1], 0, 0, missile_image, missile_info, missile_sound)
+missile_group = set() #Sprite([2 * WIDTH / 3, 2 * HEIGHT / 3], [-1,1], 0, 0, missile_image, missile_info, missile_sound)
 
 
 # register handlers
