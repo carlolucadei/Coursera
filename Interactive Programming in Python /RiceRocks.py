@@ -179,9 +179,7 @@ class Sprite:
         # update position
         self.pos[0] = (self.pos[0] + self.vel[0]) % WIDTH
         self.pos[1] = (self.pos[1] + self.vel[1]) % HEIGHT
-        if self.age >= self.lifespan:
-            return True
-        return False
+        return self.age >= self.lifespan
     
     def get_position(self):
         return [self.pos[0], self.pos[1]]
@@ -252,8 +250,7 @@ def draw(canvas):
     process_sprite_group(rock_group, canvas)
 
     # check missiles and rocks collisions
-    collisions = group_group_collide(missile_group, rock_group)
-    score += collisions
+    score += group_group_collide(missile_group, rock_group)
     
     # check collision
     if group_collide(rock_group, my_ship):
@@ -271,41 +268,33 @@ def rock_spawner():
     rock_pos = [random.randrange(0, WIDTH), random.randrange(0, HEIGHT)]
     rock_vel = [random.random() * .6 - .3, random.random() * .6 - .3]
     rock_avel = random.random() * .2 - .1
-    if len(rock_group) < 2:
+    if len(rock_group) < 12:
         rock_group.add(Sprite(rock_pos, rock_vel, 0, rock_avel, asteroid_image, asteroid_info))
 
 def process_sprite_group(items, canvas):
-    backup = set(items)
-    for item in items:
+    for item in list(items):
         if item.update():
-            backup.remove(item)
+            items.remove(item)
         else:
             item.draw(canvas)
-    items = set(backup)
 
 # group_collide helper function.
 def group_collide(items, sprite):
-    backup = set(items)
-    for item in items:
+    result = False
+    for item in list(items):
         if item.collide(sprite):
-            backup.remove(item)
+            items.discard(item)
+            result = True
 
-    if len(items) != len(backup):
-        items = set(backup)
-        return True
-    return False
+    return result
 
 def group_group_collide(collection_one, collection_two):
     collision = 0
-    remove = set()
-    for item_one in collection_one:
+    for item_one in list(collection_one):
         if group_collide(collection_two, item_one):
             collision += 1
-            remove.add(item_one)
-   
-    for item in remove:
-        collection_one.discard(item)
-        
+            collection_one.discard(item_one)
+
     return collision
 
 # initialize stuff
@@ -314,7 +303,7 @@ frame = simplegui.create_frame("Asteroids", WIDTH, HEIGHT)
 # initialize ship and two sprites
 my_ship = Ship([WIDTH / 2, HEIGHT / 2], [0, 0], 0, ship_image, ship_info)
 rock_group = set()
-missile_group = set() #Sprite([2 * WIDTH / 3, 2 * HEIGHT / 3], [-1,1], 0, 0, missile_image, missile_info, missile_sound)
+missile_group = set()
 
 
 # register handlers
