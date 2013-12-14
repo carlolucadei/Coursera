@@ -228,6 +228,7 @@ def click(pos):
     inheight = (center[1] - size[1] / 2) < pos[1] < (center[1] + size[1] / 2)
     if (not started) and inwidth and inheight:
         started = True
+        soundtrack.play()
 
 def draw(canvas):
     global time, started, rock_group, missile_group, lives, score, explosion_group
@@ -273,7 +274,6 @@ def draw(canvas):
         missile_group = set()
         rock_group = set()
         soundtrack.rewind()
-        soundtrack.play()
         canvas.draw_image(splash_image, splash_info.get_center(), 
                           splash_info.get_size(), [WIDTH / 2, HEIGHT / 2], 
                           splash_info.get_size())
